@@ -1,0 +1,29 @@
+service: node-auth-backend
+
+provider:
+  name: aws
+  runtime: nodejs14.x
+  stage: ${opt:stage, 'dev'}
+  region: ${opt:region, 'us-east-1'}
+  environment:
+    MONGODB_URI: ${ssm:/${self:provider.stage}/mongodb-uri}
+    JWT_SECRET: ${ssm:/${self:provider.stage}/jwt-secret}
+    STRIPE_SECRET_KEY: ${ssm:/${self:provider.stage}/stripe-secret}
+    # Add other environment variables
+
+functions:
+  api:
+    handler: src/lambda.handler
+    events:
+      - http:
+          path: /{proxy+}
+          method: ANY
+          cors: true
+
+plugins:
+  - serverless-offline
+  - serverless-dotenv-plugin
+
+custom:
+  dotenv:
+    path: .env.${self:provider.stage}
